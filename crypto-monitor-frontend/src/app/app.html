@@ -1,0 +1,39 @@
+<!-- Navbar opcional (se quiser ter uma barra superior sempre visível) -->
+<nav class="main-navbar" *ngIf="shouldShowNavbar()">
+  <div class="navbar-content">
+    <div class="navbar-brand">
+      <h1>🚀 Crypto Monitor</h1>
+    </div>
+    <div class="navbar-actions" *ngIf="isLoggedIn()">
+      <span class="welcome-text">Bem-vindo, {{ getCurrentUser()?.username }}!</span>
+      <button class="btn-logout-nav" (click)="logout()">
+        🚪 Sair
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Loading global (opcional) -->
+<div class="global-loading" *ngIf="isGlobalLoading">
+  <div class="loading-spinner"></div>
+  <p>Carregando...</p>
+</div>
+
+<!-- Container principal -->
+<main class="main-content" [class.with-navbar]="shouldShowNavbar()">
+  <router-outlet></router-outlet>
+</main>
+
+<!-- Footer opcional -->
+<footer class="main-footer" *ngIf="shouldShowFooter()">
+  <div class="footer-content">
+    <p>&copy; 2024 Crypto Monitor. Sistema de monitoramento de criptomoedas em tempo real.</p>
+    <div class="footer-links">
+      <span>Versão 1.0.0</span>
+      <span>•</span>
+      <a href="#" class="footer-link">Suporte</a>
+      <span>•</span>
+      <a href="#" class="footer-link">GitHub</a>
+    </div>
+  </div>
+</footer>

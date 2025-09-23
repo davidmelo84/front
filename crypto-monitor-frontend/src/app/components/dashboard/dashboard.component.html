@@ -1,0 +1,128 @@
+<div class="dashboard">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <h1>🚀 Crypto Monitor Dashboard</h1>
+      <div class="header-actions">
+        <button class="btn-secondary" (click)="testNotification()">
+          🔧 Testar Notificação
+        </button>
+        <button class="btn-primary" (click)="forceUpdate()">
+          🔄 Atualizar Agora
+        </button>
+        <button class="btn-logout" (click)="logout()">
+          🚪 Sair
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Status do Sistema -->
+  <div class="status-section" *ngIf="systemStatus">
+    <div class="status-card">
+      <div class="status-item">
+        <span class="status-label">Status:</span>
+        <span class="status-value" [class.online]="systemStatus.status === 'online'">
+          {{ systemStatus.status === 'online' ? '🟢 Online' : '🔴 Offline' }}
+        </span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Moedas Monitoradas:</span>
+        <span class="status-value">{{ systemStatus.cryptos_monitored }}</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Alertas Ativos:</span>
+        <span class="status-value">{{ systemStatus.active_alert_rules }}</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Última Atualização:</span>
+        <span class="status-value">{{ systemStatus.last_update | date:'dd/MM HH:mm' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Carregando dados...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Criptomoedas -->
+  <div class="crypto-section" *ngIf="!loading">
+    <h2>💰 Criptomoedas</h2>
+    <div class="crypto-grid">
+      <div class="crypto-card" *ngFor="let crypto of cryptos">
+        <div class="crypto-header">
+          <h3>{{ crypto.name }}</h3>
+          <span class="crypto-symbol">{{ crypto.symbol | uppercase }}</span>
+        </div>
+
+        <div class="crypto-price">
+          {{ formatPrice(crypto.currentPrice) }}
+        </div>
+
+        <div class="crypto-changes">
+          <div class="change-item">
+            <span class="change-label">1h:</span>
+            <span [class]="getPercentageClass(crypto.priceChange1h)">
+              {{ formatPercentage(crypto.priceChange1h) }}
+            </span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">24h:</span>
+            <span [class]="getPercentageClass(crypto.priceChange24h)">
+              {{ formatPercentage(crypto.priceChange24h) }}
+            </span>
+          </div>
+          <div class="change-item">
+            <span class="change-label">7d:</span>
+            <span [class]="getPercentageClass(crypto.priceChange7d)">
+              {{ formatPercentage(crypto.priceChange7d) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="crypto-actions">
+          <button class="btn-action" (click)="openAlertModal(crypto)">
+            🔔 Criar Alerta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas Ativos -->
+  <div class="alerts-section" *ngIf="alerts.length > 0">
+    <h2>🔔 Alertas Ativos</h2>
+    <div class="alerts-grid">
+      <div class="alert-card" *ngFor="let alert of alerts">
+        <div class="alert-header">
+          <span class="alert-coin">{{ alert.coinSymbol | uppercase }}</span>
+          <span class="alert-type">{{ alert.alertType }}</span>
+        </div>
+        <div class="alert-value">
+          Valor: {{ formatPrice(alert.targetValue) }}
+        </div>
+        <div class="alert-email">
+          📧 {{ alert.email }}
+        </div>
+        <button class="btn-delete" (click)="deleteAlert(alert.id)">
+          🗑️ Desativar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Criar Alerta -->
+  <app-alert-modal
+    *ngIf="showAlertModal && selectedCrypto"
+    [crypto]="selectedCrypto"
+    (close)="closeAlertModal()"
+    (created)="onAlertCreated()">
+  </app-alert-modal>
+</div>

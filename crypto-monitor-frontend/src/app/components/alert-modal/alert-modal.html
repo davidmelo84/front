@@ -1,0 +1,64 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>🔔 Criar Alerta - {{ crypto.name }}</h2>
+      <button class="close-btn" (click)="onClose()">×</button>
+    </div>
+
+    <div class="crypto-info">
+      <div class="crypto-name">{{ crypto.name }} ({{ crypto.symbol | uppercase }})</div>
+      <div class="crypto-current-price">Preço atual: {{ getCurrentPrice() }}</div>
+    </div>
+
+    <form [formGroup]="alertForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Tipo de Alerta:</label>
+        <select formControlName="alertType" class="form-control">
+          <option *ngFor="let type of alertTypes" [value]="type.value">
+            {{ type.icon }} {{ type.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Valor:</label>
+        <input
+          type="number"
+          step="0.01"
+          formControlName="targetValue"
+          class="form-control"
+          [placeholder]="getPlaceholder()">
+        <div class="error" *ngIf="alertForm.get('targetValue')?.touched && alertForm.get('targetValue')?.errors">
+          <span *ngIf="alertForm.get('targetValue')?.errors?.['required']">Valor é obrigatório</span>
+          <span *ngIf="alertForm.get('targetValue')?.errors?.['min']">Valor deve ser maior que zero</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>E-mail para notificação:</label>
+        <input
+          type="email"
+          formControlName="email"
+          class="form-control"
+          placeholder="seu-email@exemplo.com">
+        <div class="error" *ngIf="alertForm.get('email')?.touched && alertForm.get('email')?.errors">
+          <span *ngIf="alertForm.get('email')?.errors?.['required']">E-mail é obrigatório</span>
+          <span *ngIf="alertForm.get('email')?.errors?.['email']">E-mail inválido</span>
+        </div>
+      </div>
+
+      <div class="error-message" *ngIf="error">
+        {{ error }}
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="!alertForm.valid || loading">
+          {{ loading ? 'Criando...' : 'Criar Alerta' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
