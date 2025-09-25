@@ -29,4 +29,4 @@ bootstrapApplication(AppComponent, {
       multi: true
     }
   ]
-}).catch(err => console.error(err));
+}).catch(err => console.error('Erro ao inicializar aplicação:', err));
