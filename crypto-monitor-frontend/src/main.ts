@@ -11,6 +11,7 @@ import { routes } from './app/app.routes';
 import { AuthService } from './app/services/auth.service';
 import { CryptoService } from './app/services/crypto.service';
 import { AlertService } from './app/services/alert.service';
+import { MonitoringService } from './app/services/monitoring.service'; // ADICIONAR
 import { AuthGuard } from './app/guards/auth.guard';
 import { AuthInterceptor } from './app/interceptors/auth.interceptor';
 
@@ -22,6 +23,7 @@ bootstrapApplication(AppComponent, {
     AuthService,
     CryptoService,
     AlertService,
+    MonitoringService, // ADICIONAR
     AuthGuard,
     {
       provide: HTTP_INTERCEPTORS,

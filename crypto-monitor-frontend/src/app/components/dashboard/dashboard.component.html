@@ -1,6 +1,74 @@
 <div class="dashboard">
   <!-- Header -->
   <header class="header">
+    <!-- Seção de Controle de Monitoramento -->
+<div class="monitoring-control-section">
+  <div class="monitoring-card" *ngIf="!monitoringActive">
+    <div class="monitoring-header">
+      <h3>🎯 Ativar Monitoramento Automático</h3>
+      <p>Configure seu email para receber alertas automáticos de compra e venda</p>
+    </div>
+
+    <div class="monitoring-form">
+      <div class="form-group">
+        <label for="userEmail">📧 Email para receber alertas:</label>
+        <input
+          type="email"
+          id="userEmail"
+          [(ngModel)]="userEmail"
+          class="form-control"
+          placeholder="seu-email@exemplo.com"
+          [disabled]="loading">
+      </div>
+
+      <button
+        class="btn-start-monitoring"
+        (click)="startMonitoring()"
+        [disabled]="loading || !userEmail">
+        {{ loading ? '⏳ Iniciando...' : '🚀 Iniciar Monitoramento' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="monitoring-card active" *ngIf="monitoringActive">
+    <div class="monitoring-header">
+      <h3>✅ Monitoramento Ativo</h3>
+      <p>Sistema verificando preços a cada 5 minutos</p>
+    </div>
+
+    <div class="monitoring-info">
+      <div class="info-item">
+        <span class="info-label">Status:</span>
+        <span class="info-value active">🟢 Ativo</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Email:</span>
+        <span class="info-value">{{ userEmail || 'Configurado' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Frequência:</span>
+        <span class="info-value">A cada 5 minutos</span>
+      </div>
+    </div>
+
+    <button
+      class="btn-stop-monitoring"
+      (click)="stopMonitoring()"
+      [disabled]="loading">
+      {{ loading ? '⏳ Parando...' : '🛑 Parar Monitoramento' }}
+    </button>
+  </div>
+
+  <!-- Mensagens de sucesso/erro -->
+  <div class="success-message" *ngIf="successMessage">
+    ✅ {{ successMessage }}
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    ❌ {{ error }}
+  </div>
+</div>
+
     <div class="header-content">
       <h1>🚀 Crypto Monitor Dashboard</h1>
       <div class="header-actions">

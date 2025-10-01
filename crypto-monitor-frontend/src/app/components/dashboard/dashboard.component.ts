@@ -2,10 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 import { CryptoService } from '../../services/crypto.service';
 import { AlertService } from '../../services/alert.service';
 import { AuthService } from '../../services/auth.service';
+import { MonitoringService, MonitoringStatus } from '../../services/monitoring.service';
 
 import { CryptoCurrency } from '../../models/crypto.model';
 import { AlertRule } from '../../models/alert.model';
@@ -16,7 +18,7 @@ import { AlertModalComponent } from '../alert-modal/alert-modal';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, AlertModalComponent],
+  imports: [CommonModule, AlertModalComponent, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -24,8 +26,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   cryptos: CryptoCurrency[] = [];
   alerts: AlertRule[] = [];
   systemStatus: SystemStatus | null = null;
+  monitoringStatus: MonitoringStatus | null = null;
   loading: boolean = false;
   error: string = '';
+  successMessage: string = '';
+
+  // Controle de monitoramento
+  monitoringActive: boolean = false;
+  userEmail: string = '';
+
   private refreshSubscription?: Subscription;
   selectedCrypto: CryptoCurrency | null = null;
   showAlertModal: boolean = false;
@@ -34,13 +43,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private cryptoService: CryptoService,
     private alertService: AlertService,
     private authService: AuthService,
+    private monitoringService: MonitoringService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadData();
+    this.checkMonitoringStatus();
+
+    // Atualização automática de status a cada 30 segundos
     this.refreshSubscription = interval(30000).subscribe(() => {
       this.loadData();
+      this.checkMonitoringStatus();
     });
   }
 
@@ -48,18 +62,77 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.refreshSubscription?.unsubscribe();
   }
 
-  loadData(): void {
+  /**
+   * Verifica status do monitoramento
+   */
+  checkMonitoringStatus(): void {
+    this.monitoringService.getStatus().subscribe({
+      next: (status) => {
+        this.monitoringStatus = status;
+        this.monitoringActive = status.active;
+      },
+      error: (err) => console.error('Erro ao verificar status:', err)
+    });
+  }
+
+  /**
+   * Inicia o monitoramento
+   */
+  startMonitoring(): void {
+    if (!this.userEmail || this.userEmail.trim() === '') {
+      this.error = 'Por favor, insira um email válido';
+      return;
+    }
+
     this.loading = true;
     this.error = '';
+    this.successMessage = '';
 
+    this.monitoringService.startMonitoring(this.userEmail).subscribe({
+      next: (response) => {
+        this.monitoringActive = true;
+        this.successMessage = 'Monitoramento iniciado com sucesso! Você receberá alertas no email: ' + this.userEmail;
+        this.loading = false;
+        this.checkMonitoringStatus();
+      },
+      error: (err) => {
+        this.error = 'Erro ao iniciar monitoramento: ' + (err.error?.message || err.message);
+        this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * Para o monitoramento
+   */
+  stopMonitoring(): void {
+    if (confirm('Deseja realmente parar o monitoramento?')) {
+      this.loading = true;
+      this.error = '';
+      this.successMessage = '';
+
+      this.monitoringService.stopMonitoring().subscribe({
+        next: (response) => {
+          this.monitoringActive = false;
+          this.successMessage = 'Monitoramento parado com sucesso!';
+          this.loading = false;
+          this.checkMonitoringStatus();
+        },
+        error: (err) => {
+          this.error = 'Erro ao parar monitoramento: ' + (err.error?.message || err.message);
+          this.loading = false;
+        }
+      });
+    }
+  }
+
+  loadData(): void {
     this.cryptoService.getCurrentPrices().subscribe({
       next: (data) => {
         this.cryptos = data;
-        this.loading = false;
       },
       error: () => {
         this.error = 'Erro ao carregar criptomoedas';
-        this.loading = false;
       }
     });
 
@@ -76,7 +149,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   forceUpdate(): void {
     this.cryptoService.forceUpdate().subscribe({
-      next: () => this.loadData(),
+      next: () => {
+        this.loadData();
+        this.successMessage = 'Dados atualizados com sucesso!';
+      },
       error: () => (this.error = 'Erro ao atualizar dados')
     });
   }
@@ -103,7 +179,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   testNotification(): void {
     this.cryptoService.sendTestNotification().subscribe({
-      next: () => alert('Notificação de teste enviada!'),
+      next: () => {
+        this.successMessage = 'Notificação de teste enviada!';
+      },
       error: () => (this.error = 'Erro ao enviar notificação')
     });
   }
@@ -133,5 +211,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onAlertCreated(): void {
     this.closeAlertModal();
     this.loadData();
+  }
+
+  /**
+   * Limpa mensagens após 5 segundos
+   */
+  clearMessages(): void {
+    setTimeout(() => {
+      this.error = '';
+      this.successMessage = '';
+    }, 5000);
   }
 }
